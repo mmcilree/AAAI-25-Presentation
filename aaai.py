@@ -653,6 +653,10 @@ class Reification(TalkSlide):
             FadeOut(leq),
         )
 
+        self.next_slide()
+
+        self.play(reified_split1[0][0].animate.set_color(PURE_RED).scale(1.3))
+
 
 class BacktrackingSearchProofCP(TalkSlide):
     def construct(self):
@@ -804,11 +808,52 @@ class ThisPaper(TalkSlide):
         hf.set_current(4, 1)
         self.add(SlideTitle("This Paper:"))
         paper = ImageMobject("./img/paper.png").scale(0.7).shift(DOWN * 0.8 + LEFT * 3)
+        paper.set_z_index(-1)
 
         mult = MathTex(r"X \times Y = Z", color=BLACK).scale(1.5).shift(RIGHT * 4)
-        self.add(paper, mult)
+
         self.add(hf)
-        self.wait()
+
+        self.play(FadeIn(paper, shift=UP))
+
+        self.next_slide()
+
+        self.play(FadeIn(mult))
+
+        self.next_slide()
+
+        bnds1 = (
+            MathTex(r"\geq 7 \qquad \geq 3 \qquad \geq \; ?", color=PURE_RED)
+            .scale(0.9)
+            .next_to(mult, UP)
+            .align_to(mult, LEFT)
+        )
+        bnds2 = (
+            MathTex(r"\geq \; ? \qquad \geq -3 \quad \geq -4", color=PURE_RED)
+            .scale(0.9)
+            .next_to(mult, DOWN)
+            .align_to(mult, LEFT)
+        )
+        self.next_slide()
+
+        self.play(FadeIn(bnds1, shift=UP))
+
+        self.next_slide()
+
+        self.play(FadeIn(bnds2, shift=DOWN))
+
+        self.next_slide()
+
+        pb_enc = (
+            MathTex(
+                r"\sum_i 2 i z_{bi} - \sum_i \sum_j 2^{i+j} xy_{bij} = 0", color=BLACK
+            )
+            .scale(0.8)
+            .next_to(bnds2, DOWN, buff=0.8)
+            .shift(LEFT * 0.3)
+        )
+
+        self.play(FadeIn(pb_enc, shift=DOWN))
 
 
 class Takeaways(TalkSlide):
@@ -817,7 +862,7 @@ class Takeaways(TalkSlide):
         self.add(hf)
         title = SlideTitle("If nothing else:")
         self.add(title)
-        self.add(
+        bullets = (
             BulletPoints(
                 "Proof logging is a thing worth doing!",
                 "Proof logging can be applied to CP via (effectively) print statements.",
@@ -830,4 +875,10 @@ class Takeaways(TalkSlide):
             .scale(0.7)
             .align_to(title, LEFT)
         )
+        self.next_slide()
+
+        for b in bullets.bullet_texts:
+            self.play(Write(b))
+            self.next_slide()
+
         self.wait()
