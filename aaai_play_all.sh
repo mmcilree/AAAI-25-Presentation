@@ -15,4 +15,4 @@ manim-slides present AAAITitle \
     BacktrackingSearchProofCP \
     TheChallenge \
     ThisPaper \
-    Takeaways 
+    Takeaways --info-window-screen 1

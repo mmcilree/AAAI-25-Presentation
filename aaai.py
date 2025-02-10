@@ -66,7 +66,7 @@ class WhatIsCP(TalkSlide):
         values.arrange(buff=0.6).shift(DOWN)
         for i in range(len(variables)):
             variables[i].next_to(values[i], UP, buff=1)
-
+        self.wait()
         self.next_slide()
         self.play(Create(variables))
 
@@ -373,7 +373,7 @@ class PseudoBooleanism(TalkSlide):
 
         int_def = MathTex(r"{{a_i}}, {{A}} \in \mathbb Z", color=BLACK)
         lit_def = MathTex(
-            r"{{\ell_i}} \in \{x_i, \overline{x} = 1 - x_i\}", color=BLACK
+            r"{{\ell_i}} \in \{x_i, \overline{x_i} = 1 - x_i\}", color=BLACK
         )
 
         defs = Group(lit_def, int_def).scale(1.5).arrange(buff=1.5)
@@ -571,13 +571,6 @@ def run_solver(state):
         self.wait(1)
 
 
-# class BacktrackingSearchProofPB(TalkSlide):
-#     def construct(self):
-#         hf.set_current(3, 0)
-#         self.add(hf)
-#         self.wait()
-
-
 class Reification(TalkSlide):
     def construct(self):
         hf.set_current(3, 1)
@@ -640,7 +633,8 @@ class Reification(TalkSlide):
         ).next_to(reified_split1, DOWN)
 
         self.add(var)
-        self.next_slide(notes="Hello these are some notes")
+        self.wait()
+        self.next_slide()
         self.play(TransformMatchingTex(var, reified))
         self.next_slide()
         self.play(FadeIn(geq, shift=DOWN), FadeIn(leq, shift=DOWN))
@@ -741,7 +735,7 @@ class BacktrackingSearchProofCP(TalkSlide):
         ).next_to(backtrack_just_title, DOWN * 2)
 
         prop_just = MathTex(
-            r"{x_{0 = 0} \land x_{1 = 0} \implies \overline{x_{2 = 3} \geq 1",
+            r"{x_{0 = 0} \land x_{1 = 0} \implies \overline{x_{2 = 3}} \geq 1",
             color=BLACK,
         ).next_to(prop_just_title, DOWN * 2)
 
@@ -794,13 +788,27 @@ class BacktrackingSearchProofCP(TalkSlide):
         self.play(FadeIn(prop_just, shift=RIGHT), FadeIn(output_arrow2, shift=RIGHT))
 
 
-# class TheChallenge(TalkSlide):
-#     def construct(self):
-#         hf.set_current(4, 0)
-#         globals = ImageMobject("./img/globals.png").scale(3).align_on_border(UP, 3)
-#         self.add(globals)
-#         self.add(hf)
-#         self.play(globals.animate.shift(UP * globals.height), run_time=15)
+class TheChallenge(TalkSlide):
+    def construct(self):
+        hf.set_current(4, 0)
+        self.add(hf)
+        big_list = (
+            Group(
+                *[MathTex(b, color=BLACK) for b in big_constraints_list],
+                z_index=hf.z_index - 1,
+            )
+            .arrange(DOWN)
+            .align_to([0, 0, 0], UP)
+        )
+
+        self.bring_to_back(big_list)
+        con_count = 0
+
+        self.play(
+            big_list.animate.shift(-big_list.get_bottom()),
+            rate_func=rate_functions.linear,
+            run_time=25,
+        )
 
 
 class ThisPaper(TalkSlide):
