@@ -7,3 +7,5 @@ from .proof_diagram import *
 from .global_constraints_list import *
 from .slide import *
 from .smart_table import *
+
+from .match_code import *

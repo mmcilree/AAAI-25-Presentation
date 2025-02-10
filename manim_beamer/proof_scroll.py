@@ -75,8 +75,8 @@ class Scroll(VGroup):
         width=4,
         height=5.5,
         tube_height=0.6,
-        stroke_color=WHITE,
-        fill_color=BLACK,
+        stroke_color=BLACK,
+        fill_color=WHITE,
         fill_opacity=1,
         **kwargs
     ):

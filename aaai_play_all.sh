@@ -3,13 +3,16 @@ manim-slides present AAAITitle \
     WhatIsCP \
     CorrectnessMatters \
     BugsInCPSolvers \
+    Testing \
     ProofLoggingIdea \
     ProofSystemRequirements \
+    VeriPB \
     PseudoBooleanism \
     ProofRules \
-    BacktrackingSearchProofPB \
+    AdditionalRules \
+    PrintStatements \
+    Reification \
     BacktrackingSearchProofCP \
-    CPPropagatorJustifications \
     TheChallenge \
     ThisPaper \
     Takeaways 

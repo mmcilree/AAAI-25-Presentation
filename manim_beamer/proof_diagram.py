@@ -22,34 +22,34 @@ class ProofDiagramBox(Group):
         super().__init__()
         self.rect = RoundedRectangle(
             corner_radius=corner_radius,
-            fill_color=BLACK,
+            fill_color=WHITE,
             fill_opacity=1,
-            stroke_color=WHITE,
+            stroke_color=BLACK,
             width=width,
             height=height,
             # stroke_width=6,
             **kwargs
         )
-        text = (
+        self.text = (
             Paragraph(label, alignment="center", **TALK_BODY_TEXT)
             .align_to(self.rect, UP)
             .shift(DOWN * text_buff)
             .scale(text_scale)
         )
         self.add(self.rect)
-        self.add(text)
+        self.add(self.text)
 
 
 class Solver(ProofDiagramBox):
     def __init__(self, **kwargs):
         super().__init__("CP Solver", **kwargs)
-        gears = (
-            ImageMobject("images/gears.png")
+        self.gears = (
+            ImageMobject("img/gears.png")
             .scale(0.58)
             .align_to(self.rect, DOWN)
             .shift(UP * 0.34)
         )
-        self.add(gears)
+        self.add(self.gears)
 
 
 class LineGroup(VGroup):
@@ -57,7 +57,7 @@ class LineGroup(VGroup):
         super().__init__(**kwargs)
         lines = VGroup(
             *[
-                Line(left + [buff, 0, 0], right - [buff, 0, 0], stroke_color=WHITE)
+                Line(left + [buff, 0, 0], right - [buff, 0, 0], stroke_color=BLACK)
                 for _ in range(num)
             ]
         )
@@ -90,7 +90,7 @@ class Checker(ProofDiagramBox):
             **kwargs
         )
         gears = (
-            ImageMobject("images/checker.png")
+            ImageMobject("img/checker.png")
             .scale(0.25)
             .align_to(self.rect, DOWN)
             .shift(UP * 0.25)

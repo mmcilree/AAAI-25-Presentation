@@ -6,7 +6,7 @@ DARK_ORANGE = "#C55A11"
 CMU_SANS = "CMU Sans Serif"
 config["background_color"] = "#E5E5E5"
 
-TALK_BODY_TEXT = {"font_size": 44}
+TALK_BODY_TEXT = {"font": CMU_SANS, "font_size": 44, "color": BLACK}
 
 GRAPH_NODE_STYLE = {
     "radius": 0.4,

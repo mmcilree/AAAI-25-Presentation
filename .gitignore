@@ -1,5 +1,9 @@
+*.toml 
+.DS_Store
+
 media/
 slides/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
