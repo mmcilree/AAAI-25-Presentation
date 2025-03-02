@@ -1,6 +1,7 @@
 from manim import *
 from manim_slides import Slide
 from manim_beamer import *
+from bounds_bar import BoundsBar
 
 import os
 
@@ -10,22 +11,20 @@ FRAME_HEIGHT = config["frame_height"]
 hf = HeaderFooter(
     {
         "Background and Motivation": 4,
-        "Proof Logging": 2,
-        "Pseudo-Boolean Reasoning": 4,
-        "How to Write Proofs": 3,
-        "Conclusions": 3,
+        "Proof Logging": 3,
+        "...for CP?": 4,
+        "This Paper": 4,
     },
-    title="Proof Logging for Constraint Programming",
+    title="Certifying Bounds Propagation for Integer Multiplication Constraints",
     name="Matthew McIlree",
 )
 
 
 class AAAITitle(TalkSlide):
     def construct(self):
-
         self.add(
             TitleSlide(
-                "Proof Logging\nfor Constraint Programming",
+                "Certifying Bounds Propagation\nfor Integer Multiplication Constraints",
                 venue="AAAI, Philadelphia, Pennsylvania, 2 March 2025",
                 author="Matthew McIlree and Ciaran McCreesh",
             )
@@ -33,86 +32,62 @@ class AAAITitle(TalkSlide):
         self.wait()
 
 
-class WhatIsCP(TalkSlide):
+class CorrectAnswers(TalkSlide):
     def construct(self):
-        self.next_slide(
-            notes="""
-**Constraint Programming:**
-- Most people should be familiar
-- Variables, Values, Constraints
-- Asking: satisfy or optimise
-- Model rostering, scheduling, resource allocation, 
-- CP solvers can tackle industrial size instances with hundreds or even thousands of variables and constraints
-""",
-        )
         hf.set_current(0, 0)
         self.add(hf)
-
-        variables = VGroup(*[MathTex(v, color=BLACK) for v in ["X", "Y", "Z", "W"]])
-
-        value_sets = [[1, 2, 3], [3, 4, 5], [2, 3, 4], [4, 5, 6]]
-        values = VGroup(
+        text = Text('CP Solvers are "Exact"', **TALK_BODY_TEXT).scale(2)
+        self.add(text)
+        self.next_slide()
+        num_bugs = 5
+        bug_size = 0.1
+        bug_rots = [(i + 1) * 0.377 * PI for i in range(num_bugs)]
+        bugs = Group(
             *[
-                MathTex(v, color=BLACK)
-                for v in [
-                    r"\{" + ", ".join([str(v) for v in vs]) + r"\}" for vs in value_sets
-                ]
+                ImageMobject("img/bug.png").scale(bug_size).rotate(bug_rots[i])
+                for i in range(num_bugs)
             ]
+        ).arrange(buff=0.5)
+
+        final_pos = {str(bug): bug.get_center() for bug in bugs}
+
+        for i, bug in enumerate(bugs):
+            bug.shift(
+                rotate_vector(bug.get_top() - bug.get_center(), bug_rots[i]) * -10
+            )
+
+        self.add(bugs)
+
+        self.wait()
+
+        self.next_slide()
+
+        self.play(
+            *[
+                bug.animate.shift(
+                    rotate_vector(bug.get_top() - bug.get_center(), bug_rots[i]) * 10
+                )
+                for i, bug in enumerate(bugs)
+            ],
+            run_time=3,
         )
 
-        variables.scale(1.7)
-        values.scale(1.7)
-
-        values.arrange(buff=0.6).shift(DOWN)
-        for i in range(len(variables)):
-            variables[i].next_to(values[i], UP, buff=1)
-        self.wait()
         self.next_slide()
-        self.play(Create(variables))
-
-        self.next_slide()
-
-        self.play(Create(values))
-
-        self.next_slide()
-
-        self.wait()
-
-        cons = [
-            [1, 3, 2, 4],
-            [2, 4, 3, 6],
-            [3, 5, 4, 6],
-            [1, 4, 3, 5],
-        ]
-        anims = []
-
-        for con_num in range(len(cons)):
-            for set_num in range(len(cons[con_num])):
-                for idx in range(3):
-                    if value_sets[set_num][idx] == cons[con_num][set_num]:
-                        anims.append(
-                            Indicate(values[set_num][0][idx * 2 + 1], color=PURE_RED)
-                        )
-                    self.next_slide()
-            self.play(*anims)
-            anims = []
 
 
 class CorrectnessMatters(TalkSlide):
     def construct(self):
         self.next_slide(
             notes="""
-    **Correctness matters:**
-    - In some problems, correctness matters
-    - Should be fairly self explanatory
-    - Safety, Legal, Ethical or Financial
-    - Mildly bad to disatrous consequences
-    """,
+            """,
         )
         hf.set_current(0, 1)
         self.add(hf)
-        self.add(SlideTitle("Correctness Matters!").set_x(0))
-        self.add(ImageMobject("./img/applications.png").scale(0.32).shift(DOWN * 0.5))
+        # self.add(SlideTitle("Correctness Matters!").set_x(0))
+
+        self.play(
+            FadeIn(ImageMobject("./img/applications.png").shift(DOWN * 0.1).scale(0.37))
+        )
         self.wait()
 
 
@@ -157,7 +132,7 @@ class Testing(TalkSlide):
         self.next_slide(
             notes="""
         - Testing: important, but will never demonstrate the absence of bugs
-        - Formal verification:
+        - Formal verification: far away from being able to deal with CP
         """,
         )
         hf.set_current(0, 3)
@@ -191,7 +166,6 @@ class Testing(TalkSlide):
         qmark = Text("?", color=BLACK).scale(9)
 
         self.play(FadeIn(qmark))
-        self.wait()
 
 
 class ProofLoggingIdea(TalkSlide):
@@ -278,7 +252,7 @@ class ProofSystemRequirements(TalkSlide):
 
 class VeriPB(TalkSlide):
     def construct(self):
-        hf.set_current(2, 0)
+        hf.set_current(1, 2)
         self.add(hf)
         veripb = Text(
             "VeriPB",
@@ -330,172 +304,76 @@ class VeriPB(TalkSlide):
         halo.move_to(veripb.get_top() + UP * 0.4)
         self.play(FadeIn(wing1), FadeIn(wing2), FadeIn(halo))
 
-        self.next_slide(auto_next=True)
-        new_title = SlideTitle("Pseudo-Boolean Constraints")
-        self.play(
-            *[
-                FadeOut(t)
-                for t in [
-                    wing1,
-                    wing2,
-                    halo,
-                    veripb,
-                    cutting_planes,
-                    working_checker,
-                    multiple_paradigms,
-                ]
-            ],
-            Transform(pb, new_title),
-            hf.animate.next(),
-        )
 
-        self.wait()
-
-
-class PseudoBooleanism(TalkSlide):
+class EncodingProblems(TalkSlide):
     def construct(self):
-        hf.set_current(2, 1)
+        hf.set_current(2, 0)
+        title = SlideTitle("Pseudo-Boolean Proof Logging for CP")
         self.add(hf)
-        self.add(SlideTitle("Pseudo-Boolean Constraints"))
-
-        self.next_slide()
-
-        sum_x = MathTex(r"\sum_{i=0}^{n-1} {{a_i}} {{x_i}} \geq {{A}}", color=BLACK)
-        sum_x.scale(2.4).shift(UP * 0.25)
-        sum_x_copy = sum_x.copy()
-        sum_x_copy.set_opacity(0)
-        sum_x_copy[1].set_opacity(1)
-        sum_x_copy[5].set_opacity(1)
-
-        self.play(FadeIn(sum_x))
-
-        self.next_slide()
-
-        int_def = MathTex(r"{{a_i}}, {{A}} \in \mathbb Z", color=BLACK)
-        lit_def = MathTex(
-            r"{{\ell_i}} \in \{x_i, \overline{x_i} = 1 - x_i\}", color=BLACK
-        )
-
-        defs = Group(lit_def, int_def).scale(1.5).arrange(buff=1.5)
-        defs.next_to(sum_x, DOWN, buff=0.75)
-
-        self.play(TransformMatchingTex(sum_x_copy, int_def))
-
-        self.next_slide()
-
-        sum_l = MathTex(r"\sum_{i=0}^{n-1} {{a_i}} {{\ell_i}} \geq {{A}}", color=BLACK)
-        sum_l.scale(2.4).shift(UP * 0.25)
-
-        self.play(TransformMatchingTex(sum_x, sum_l))
-
-        self.next_slide()
-
-        sum_l_copy = sum_l.copy()
-        sum_l_copy.set_opacity(0)
-        sum_l_copy[2].set_opacity(1)
-
-        self.play(TransformMatchingTex(sum_l_copy, lit_def))
-        self.wait()
-
-
-class ProofRules(TalkSlide):
-    def construct(self):
-        hf.set_current(2, 2)
-        self.add(hf)
-        litaxiom = MathTex(r"\quad \frac{\phantom{\Sigma}}{\ell_i \geq 0}", color=BLACK)
-
-        addition = MathTex(
-            r"\frac{\sum a_i \ell_i \geq A \qquad \sum b_i \ell'_i \geq B}{\sum a_i\ell_i + \sum b_i\ell'_i \geq A + B}",
-            color=BLACK,
-        )
-        multiplication = MathTex(
-            r"\frac{\sum a_i \ell_i \geq A}{\quad \lambda a_i \ell_i \geq \lambda A}, \; \lambda \in \mathbb{N}^+",
-            color=BLACK,
-        )
-
-        division = MathTex(
-            r"\frac{\sum a_i \ell_i \geq A}{\sum \lceil a_i/c \rceil \ell_i  \geq \lceil A/c \rceil}, \; c \in \mathbb{N}^+",
-            color=BLACK,
-        )
-
-        rules = (
-            Group(litaxiom, addition, multiplication, division)
-            .arrange_in_grid(buff=(1.2, 1.6))
-            .shift(DOWN * 0.7)
-        )
-
-        litaxiom.shift(DOWN * 0.25)
-
-        titles = Group(
-            *[
-                Text(s, **TALK_BODY_TEXT)
-                for s in [
-                    "Literal Axiom:",
-                    "Addition:",
-                    "Scalar Multiplication:",
-                    "Division:",
-                ]
-            ]
-        )
-
-        for t, r in zip(titles, rules):
-            t.next_to(r, UP)
-
-        titles[0].align_to(titles[1], UP)
-        titles[2].align_to(titles[3], UP)
-
-        title = SlideTitle("Cutting Planes Rules: ")
-        self.play(FadeIn(title))
-        self.next_slide()
-
-        self.play(FadeIn(rules, titles))
-        self.wait()
-        self.next_slide(auto_next=True)
-        new_title = SlideTitle("Additional Rules:")
-        self.play(
-            Transform(title, new_title),
-            hf.animate.next(),
-            FadeOut(rules),
-            FadeOut(titles),
-        )
-
-
-class AdditionalRules(TalkSlide):
-    def construct(self):
-        hf.set_current(2, 3)
-        self.add(hf)
-        title = SlideTitle("Additional Rules:")
         self.add(title)
+        line = Line(UP * 2, DOWN * 3, color=GRAY)
+        self.add(line)
         self.wait()
         self.next_slide()
 
-        rup = (
-            MarkupText(
-                r'<b>RUP</b> := "Sufficiently obvious for the verifier."',
-                **TALK_BODY_TEXT,
-            )
-            .next_to(title, DOWN, buff=1)
-            .align_to(title, LEFT)
+        cp_vars = (
+            Group(*[MathTex(s, color=BLACK) for s in ["X", "Y", "Z"]])
+            .scale(2.5)
+            .arrange(buff=0.8)
+            .move_to(LEFT * FRAME_WIDTH / 4 + UP * 0.4)
         )
 
-        red = (
-            MarkupText(
-                r'<b>RED</b> := "Allowed to define new variables."',
-                **TALK_BODY_TEXT,
+        pb_vars = [
+            VGroup(
+                *[MathTex(v + r"_{b" + str(i) + r"}", color=BLACK) for i in range(3)]
             )
-            .scale(1)
-            .next_to(rup, DOWN, buff=1)
-            .align_to(rup, LEFT)
-        )
+            for v in ["x", "y", "z"]
+        ]
 
-        self.play(FadeIn(rup))
+        self.play(*[FadeIn(var) for var in cp_vars])
+
         self.next_slide()
-        self.play(FadeIn(red), shift=DOWN)
+
+        for i in range(len(pb_vars)):
+            pb_vars[i].arrange(buff=0.8).move_to(
+                RIGHT * FRAME_WIDTH / 4 + UP * FRAME_HEIGHT / 6
+            )
+
+            if i > 0:
+                pb_vars[i].next_to(pb_vars[i - 1], DOWN, buff=0.6)
+
+            rect = SurroundingRectangle(
+                pb_vars[i], color=UG_COBALT, corner_radius=0.05, buff=0.15
+            )
+
+            self.play(Transform(cp_vars[i].copy(), pb_vars[i]), Create(rect))
+
+        self.next_slide()
+
+        eq_con = (
+            MathTex(r"X = Y", color=BLACK).scale(2).next_to(cp_vars, DOWN, buff=1.5)
+        )
+
+        self.play(FadeIn(eq_con))
+
+        self.next_slide()
+
+        pb_con = (
+            MathTex(
+                r"x_{b0} + 2 x_{b1} + 4 x_{b2} - y_{b0} - 2 y_{b1} - 4 y_{b2} \geq 0\\ -x_{b0} - 2 x_{b1} - 4 x_{b2} + y_{b0} + 2 y_{b1} + 4 y_{b2} \geq 0",
+                color=BLACK,
+            )
+            .scale(0.7)
+            .next_to(pb_vars[2], DOWN, buff=1)
+        )
+
+        self.play(Transform(eq_con.copy(), pb_con))
+        self.wait()
 
 
 class PrintStatements(TalkSlide):
     def construct(self):
-        hf.set_current(3, 0)
+        hf.set_current(2, 1)
         self.add(hf)
         # Define the initial function code (without print statements)
         code_initial = """
@@ -571,227 +449,64 @@ def run_solver(state):
         self.wait(1)
 
 
-class Reification(TalkSlide):
+class ProofLoggingInvariant(TalkSlide):
     def construct(self):
-        hf.set_current(3, 1)
+        hf.set_current(2, 2)
         self.add(hf)
-        var = MathTex(r"x_{i = j}", color=BLACK).scale(3)
+        self.add(SlideTitle("Proof Logging Invariant"))
 
-        reified = (
+        invariant = (
             MathTex(
-                r"x_{i = j}",
-                r"\iff",
-                r"x_{i \geq j} + x_{i \leq j} \geq 2",
+                r"\textit{reason}", r"\implies", r"\textit{conclusion}", color=BLACK
+            )
+            .scale(2)
+            .move_to(UP * FRAME_HEIGHT / 6)
+        )
+        self.play(Write(invariant))
+        self.next_slide()
+
+        invariant_ex = (
+            MathTex(
+                r"x_{=1}",
+                r"\land",
+                r"y_{=2}",
+                r"\implies",
+                r"\lnot",
+                r"z_{=4}",
+                r"\land",
+                r"\lnot",
+                r"w_{=5}",
                 color=BLACK,
             )
-            .scale(1.5)
-            .shift(UP)
+            .scale(2)
+            .next_to(invariant, DOWN, buff=0.8)
         )
-
-        geq = (
+        self.play(TransformMatchingTex(invariant.copy(), invariant_ex))
+        self.next_slide()
+        invariant_pb = (
             MathTex(
-                r"x_{i \geq j}",
-                r"\iff",
-                r"x_{b0} + 2x_{b1} + 4x_{b2} \geq j",
-                color=BLACK,
+                r"-" r"x_{=1}",
+                r"-",
+                r"y_{=2}",
+                r"",
+                r"-",
+                r"z_{=4}",
+                r"-",
+                r"w_{=5}",
+                r"\geq -2",
+                color=UG_BLUE,
             )
-            .scale(1.5)
-            .next_to(reified, DOWN)
+            .scale(2)
+            .next_to(invariant_ex, DOWN, buff=0.8)
         )
 
-        leq = (
-            MathTex(
-                r"x_{i \leq j}",
-                r"\iff",
-                r"-x_{b0} - 2x_{b1} - 4x_{b2} \geq -j",
-                color=BLACK,
-            )
-            .scale(1.5)
-            .next_to(geq, DOWN)
-        )
-
-        reified_split1 = (
-            MathTex(
-                r"2 \bar " + "x_{i = j}",
-                "+",
-                r"x_{i \geq j} + x_{i \leq j} \geq 2",
-                color=BLACK,
-            )
-            .scale(1.5)
-            .shift(UP)
-        )
-
-        reified_split2 = (
-            MathTex(
-                r"x_{i = j}",
-                "+",
-                r"\bar x_{i \geq j} + \bar x_{i \leq j} \geq 1",
-                color=BLACK,
-            )
-            .scale(1.5)
-            .shift(UP)
-        ).next_to(reified_split1, DOWN)
-
-        self.add(var)
-        self.wait()
-        self.next_slide()
-        self.play(TransformMatchingTex(var, reified))
-        self.next_slide()
-        self.play(FadeIn(geq, shift=DOWN), FadeIn(leq, shift=DOWN))
-        self.next_slide()
-
-        self.play(
-            TransformMatchingTex(reified, reified_split1),
-            FadeIn(reified_split2, shift=DOWN),
-            FadeOut(geq),
-            FadeOut(leq),
-        )
-
-        self.next_slide()
-
-        self.play(reified_split1[0][0].animate.set_color(PURE_RED).scale(1.3))
-
-
-class BacktrackingSearchProofCP(TalkSlide):
-    def construct(self):
-        hf.set_current(3, 2)
-        self.add(hf)
-        title = SlideTitle("CP Proof Logging Framework")
-        self.add(hf)
-        self.add(title)
-
-        vars = Group(
-            *[MathTex(f"X_{i}", color=BLACK) for i in range(0, 3)],
-            MathTex("X_4", opacity=1),
-        )
-
-        vars.arrange(DOWN + LEFT * 0.7, buff=0.7)
-
-        contr = Text("×", color=PURE_RED, weight=BOLD).move_to(vars[3].get_center())
-
-        guess_arrows = VGroup(
-            *[
-                Arrow(
-                    vars[i],
-                    vars[i + 1],
-                    stroke_color=UG_BLUE,
-                    stroke_width=5,
-                    buff=0.15,
-                )
-                for i in range(0, 3)
-            ]
-        )
-
-        guess_labels = VGroup(
-            *[
-                MathTex(" = 0 ", color=BLACK)
-                .move_to(guess_arrows.submobjects[i])
-                .scale(0.5)
-                .shift(RIGHT * 0.4)
-                for i in range(0, 3)
-            ]
-        )
-
-        backtrack_diagram = Group(vars[:-1], guess_arrows, guess_labels, contr)
-        backtrack_diagram.shift(LEFT * 4)
-
-        backtrack_just_title = (
-            Text("Backtracking Justifications: ", **TALK_BODY_TEXT)
-            .scale(0.7)
-            .shift(RIGHT * 4 + UP * 1.5)
-        )
-
-        backtrack_just_title.color = UG_COBALT
-
-        prop_just_title = (
-            Text("Propagation Justifications: ", **TALK_BODY_TEXT)
-            .scale(0.7)
-            .next_to(backtrack_just_title, DOWN * 8)
-        )
-
-        prop_just_title.color = UG_COBALT
-        self.wait()
-        self.next_slide()
-        self.play(FadeIn(backtrack_just_title))
-        self.next_slide()
-        self.play(FadeIn(prop_just_title))
-        self.next_slide()
-
-        for i in range(0, 3):
-            self.play(
-                FadeIn(vars[i]),
-                GrowArrow(guess_arrows[i]),
-                FadeIn(guess_labels[i]),
-                run_time=0.5,
-            )
-            self.next_slide()
-
-        self.play(FadeIn(contr))
-        self.next_slide()
-
-        backtrack_just = MathTex(
-            r"\overline{x_{0 = 0}} + \overline{x_{1 = 0}} + \overline{x_{2 = 0}} \geq 1",
-            color=BLACK,
-        ).next_to(backtrack_just_title, DOWN * 2)
-
-        prop_just = MathTex(
-            r"{x_{0 = 0} \land x_{1 = 0} \implies \overline{x_{2 = 3}} \geq 1",
-            color=BLACK,
-        ).next_to(prop_just_title, DOWN * 2)
-
-        output_arrow2 = Arrow(
-            prop_just.get_left() + LEFT * 2,
-            prop_just.get_left(),
-            tip_shape=StealthTip,
-            color=GRAY,
-            stroke_width=4,
-        )
-
-        output_arrow1 = Arrow(
-            backtrack_just.get_left() + LEFT * 2,
-            backtrack_just.get_left(),
-            tip_shape=StealthTip,
-            color=GRAY,
-            stroke_width=4,
-        ).align_to(output_arrow2, LEFT)
-
-        self.play(
-            FadeIn(backtrack_just, shift=RIGHT), FadeIn(output_arrow1, shift=RIGHT)
-        )
-
-        self.next_slide()
-
-        self.play(FadeOut(contr), FadeOut(guess_labels[2]), FadeOut(guess_arrows[2]))
-
-        self.next_slide()
-
-        prop_arrow = DashedLine(
-            vars[2].get_center(),
-            vars[2].get_center() + RIGHT * 2.5,
-            dash_length=0.1,
-            color=UG_COBALT,
-            buff=0.5,
-        ).add_tip(
-            tip_length=guess_arrows[0].tip.length, tip_width=guess_arrows[0].tip.width
-        )
-
-        prop = (
-            MathTex(r" \neq 3 ", color=UG_COBALT).scale(0.7).next_to(prop_arrow, RIGHT)
-        )
-
-        self.play(
-            GrowFromPoint(prop_arrow, prop_arrow.start), FadeIn(prop, shift=RIGHT)
-        )
-
-        self.next_slide()
-
-        self.play(FadeIn(prop_just, shift=RIGHT), FadeIn(output_arrow2, shift=RIGHT))
+        self.play(TransformMatchingTex(invariant_ex.copy(), invariant_pb))
 
 
 class TheChallenge(TalkSlide):
     def construct(self):
-        hf.set_current(4, 0)
-        self.add(hf)
+        hf.set_current(2, 3)
+
         big_list = (
             Group(
                 *[MathTex(b, color=BLACK) for b in big_constraints_list],
@@ -804,6 +519,8 @@ class TheChallenge(TalkSlide):
         self.bring_to_back(big_list)
         con_count = 0
 
+        self.add(big_list)
+        self.add(hf)
         self.play(
             big_list.animate.shift(-big_list.get_bottom()),
             rate_func=rate_functions.linear,
@@ -813,7 +530,7 @@ class TheChallenge(TalkSlide):
 
 class ThisPaper(TalkSlide):
     def construct(self):
-        hf.set_current(4, 1)
+        hf.set_current(3, 0)
         self.add(SlideTitle("This Paper:"))
         paper = ImageMobject("./img/paper.png").scale(0.7).shift(DOWN * 0.8 + LEFT * 3)
         paper.set_z_index(-1)
@@ -830,43 +547,121 @@ class ThisPaper(TalkSlide):
 
         self.next_slide()
 
-        bnds1 = (
-            MathTex(r"\geq 7 \qquad \geq 3 \qquad \geq \; ?", color=PURE_RED)
-            .scale(0.9)
-            .next_to(mult, UP)
-            .align_to(mult, LEFT)
+        rect = SurroundingRectangle(mult, corner_radius=0.1, color=PURE_RED, buff=0.4)
+
+        mult_grp = Group(mult, rect)
+
+        self.play(
+            FadeOut(paper),
+            FadeIn(rect),
+            mult_grp.animate.move_to([0, 0, 0]).shift(UP * 1.5),
         )
-        bnds2 = (
-            MathTex(r"\geq \; ? \qquad \geq -3 \quad \geq -4", color=PURE_RED)
-            .scale(0.9)
-            .next_to(mult, DOWN)
-            .align_to(mult, LEFT)
-        )
-        self.next_slide()
-
-        self.play(FadeIn(bnds1, shift=UP))
-
-        self.next_slide()
-
-        self.play(FadeIn(bnds2, shift=DOWN))
-
         self.next_slide()
 
         pb_enc = (
             MathTex(
-                r"\sum_i 2 i z_{bi} - \sum_i \sum_j 2^{i+j} xy_{bij} = 0", color=BLACK
+                r"\sum_i 2 i z_{bi} - \sum_i \sum_j 2^{i+j} {{xy_{bij}}} = 0",
+                color=BLACK,
             )
-            .scale(0.8)
-            .next_to(bnds2, DOWN, buff=0.8)
+            .next_to(mult_grp, DOWN, buff=1)
             .shift(LEFT * 0.3)
         )
 
-        self.play(FadeIn(pb_enc, shift=DOWN))
+        self.play(Transform(mult.copy(), pb_enc))
+
+        self.next_slide()
+
+        bit_vars = MathTex(
+            r"{{xy_{bij}}} \iff x_{bi} + y_{bj} \geq 2", color=BLACK
+        ).next_to(pb_enc, DOWN, buff=0.8)
+
+        self.play(
+            Transform(
+                pb_enc.copy()[1],
+                bit_vars,
+            )
+        )
+
+
+class BoundsConsistency(TalkSlide):
+    def construct(self):
+        hf.set_current(3, 1)
+        self.add(hf)
+        self.add(SlideTitle("Bounds Consistency"))
+        self.add(hf)
+        x_bar = BoundsBar(
+            var_name="X", max_bounds=(-2, 7), bounds=[(-2, 7), (-2, 7), (-2, 7)]
+        ).next_to(hf.h_background2, DOWN, buff=1)
+
+        y_bar = BoundsBar(
+            var_name="Y", max_bounds=(-2, 7), bounds=[(-2, 7), (-2, 7), (-2, 7)]
+        ).next_to(x_bar, DOWN, buff=0.8)
+
+        z_bar = BoundsBar(
+            var_name="Z", max_bounds=(-2, 7), bounds=[(-2, 7), (-2, 7), (-2, 7)]
+        ).next_to(y_bar, DOWN, buff=0.8)
+
+        self.add(x_bar, y_bar, z_bar)
+        self.wait()
+
+        self.next_slide()
+
+        self.play(x_bar.animate.update_bounds([(-2, 7), (2, 3), (2, 3)]))
+        self.play(y_bar.animate.update_bounds([(-2, 7), (1, 2), (1, 2)]))
+        self.play(z_bar.animate.update_bounds([(-2, 7), (-1, 7), (-1, 7)]))
+        self.next_slide()
+
+        self.play(z_bar.animate.update_bounds([(-2, 7), (-1, 7), (2, 6)]))
+
+        self.next_slide()
+
+        new_x_bar = BoundsBar(
+            var_name="X", max_bounds=(-6, 5), bounds=[(-6, 5), (-6, 5), (-6, 5)]
+        ).move_to(x_bar)
+
+        new_y_bar = BoundsBar(
+            var_name="Y", max_bounds=(-6, 5), bounds=[(-6, 5), (-1, 2), (-1, 2)]
+        ).move_to(y_bar)
+
+        new_z_bar = BoundsBar(
+            var_name="Z",
+            max_bounds=(-6, 5),
+            bounds=[(-6, 5), (-4, -1), (-4, -1)],
+        ).move_to(z_bar)
+
+        self.play(
+            x_bar.animate.become(new_x_bar),
+            y_bar.animate.become(new_y_bar),
+            z_bar.animate.become(new_z_bar),
+        )
+
+        self.remove(x_bar)
+        self.next_slide()
+
+        self.play(new_x_bar.animate.update_bounds([(-6, 5), (-6, 5), (-4, 5)]))
+
+        self.next_slide()
+
+        self.play(new_x_bar.animate.update_bounds([(-6, 5), (-6, 5), (-4, 4)]))
+
+
+class Overheads(TalkSlide):
+    def construct(self):
+        hf.set_current(3, 2)
+        self.add(hf)
+
+        self.add(SlideTitle("Overheads"))
+        l_graph = ImageMobject("img/experiments1.png").scale(0.3)
+        r_graph = ImageMobject("img/experiments2.png").scale(0.3)
+
+        self.add(Group(l_graph, r_graph).arrange().shift(DOWN * 0.3))
+
+        self.wait()
 
 
 class Takeaways(TalkSlide):
     def construct(self):
-        hf.set_current(4, 2)
+        hf.set_current(3, 3)
         self.add(hf)
         title = SlideTitle("If nothing else:")
         self.add(title)

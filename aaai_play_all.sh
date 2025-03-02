@@ -1,18 +1,17 @@
 #!/bin/bash 
 manim-slides present AAAITitle \
-    WhatIsCP \
+    CorrectAnswers \
     CorrectnessMatters \
     BugsInCPSolvers \
     Testing \
     ProofLoggingIdea \
     ProofSystemRequirements \
     VeriPB \
-    PseudoBooleanism \
-    ProofRules \
-    AdditionalRules \
+    EncodingProblems \
     PrintStatements \
-    Reification \
-    BacktrackingSearchProofCP \
+    ProofLoggingInvariant \
     TheChallenge \
     ThisPaper \
+    BoundsConsistency \
+    Overheads \
     Takeaways --info-window-screen 1
