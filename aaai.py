@@ -371,6 +371,101 @@ class EncodingProblems(TalkSlide):
         self.wait()
 
 
+class ProofRules(TalkSlide):
+    def construct(self):
+        hf.set_current(2, 2)
+        self.add(hf)
+        litaxiom = MathTex(r"\quad \frac{\phantom{\Sigma}}{\ell_i \geq 0}", color=BLACK)
+
+        addition = MathTex(
+            r"\frac{\sum a_i \ell_i \geq A \qquad \sum b_i \ell'_i \geq B}{\sum a_i\ell_i + \sum b_i\ell'_i \geq A + B}",
+            color=BLACK,
+        )
+        multiplication = MathTex(
+            r"\frac{\sum a_i \ell_i \geq A}{\quad \lambda a_i \ell_i \geq \lambda A}, \; \lambda \in \mathbb{N}^+",
+            color=BLACK,
+        )
+
+        division = MathTex(
+            r"\frac{\sum a_i \ell_i \geq A}{\sum \lceil a_i/c \rceil \ell_i  \geq \lceil A/c \rceil}, \; c \in \mathbb{N}^+",
+            color=BLACK,
+        )
+
+        rules = (
+            Group(litaxiom, addition, multiplication, division)
+            .arrange_in_grid(buff=(1.2, 1.6))
+            .shift(DOWN * 0.7)
+        )
+
+        litaxiom.shift(DOWN * 0.25)
+
+        titles = Group(
+            *[
+                Text(s, **TALK_BODY_TEXT)
+                for s in [
+                    "Literal Axiom:",
+                    "Addition:",
+                    "Scalar Multiplication:",
+                    "Division:",
+                ]
+            ]
+        )
+
+        for t, r in zip(titles, rules):
+            t.next_to(r, UP)
+
+        titles[0].align_to(titles[1], UP)
+        titles[2].align_to(titles[3], UP)
+
+        title = SlideTitle("Cutting Planes Rules: ")
+        self.play(FadeIn(title))
+        self.next_slide()
+
+        self.play(FadeIn(rules, titles))
+        self.wait()
+        self.next_slide(auto_next=True)
+        new_title = SlideTitle("Additional Rules:")
+        self.play(
+            Transform(title, new_title),
+            hf.animate.next(),
+            FadeOut(rules),
+            FadeOut(titles),
+        )
+
+
+class AdditionalRules(TalkSlide):
+    def construct(self):
+        hf.set_current(2, 3)
+        self.add(hf)
+        title = SlideTitle("Additional Rules:")
+        self.add(title)
+        self.wait()
+        self.next_slide()
+
+        rup = (
+            MarkupText(
+                r'<b>RUP</b> := "Sufficiently obvious for the verifier."',
+                **TALK_BODY_TEXT,
+            )
+            .next_to(title, DOWN, buff=1)
+            .align_to(title, LEFT)
+        )
+
+        red = (
+            MarkupText(
+                r'<b>RED</b> := "Allowed to define new variables."',
+                **TALK_BODY_TEXT,
+            )
+            .scale(1)
+            .next_to(rup, DOWN, buff=1)
+            .align_to(rup, LEFT)
+        )
+
+        self.play(FadeIn(rup))
+        self.next_slide()
+        self.play(FadeIn(red), shift=DOWN)
+
+
 class PrintStatements(TalkSlide):
     def construct(self):
         hf.set_current(2, 1)
@@ -501,6 +596,142 @@ class ProofLoggingInvariant(TalkSlide):
         )
 
         self.play(TransformMatchingTex(invariant_ex.copy(), invariant_pb))
+
+
+class BacktrackingSearchProofCP(TalkSlide):
+    def construct(self):
+        hf.set_current(3, 2)
+        self.add(hf)
+        title = SlideTitle("CP Proof Logging Framework")
+        self.add(hf)
+        self.add(title)
+
+        vars = Group(
+            *[MathTex(f"X_{i}", color=BLACK) for i in range(0, 3)],
+            MathTex("X_4", opacity=1),
+        )
+
+        vars.arrange(DOWN + LEFT * 0.7, buff=0.7)
+
+        contr = Text("×", color=PURE_RED, weight=BOLD).move_to(vars[3].get_center())
+
+        guess_arrows = VGroup(
+            *[
+                Arrow(
+                    vars[i],
+                    vars[i + 1],
+                    stroke_color=UG_BLUE,
+                    stroke_width=5,
+                    buff=0.15,
+                )
+                for i in range(0, 3)
+            ]
+        )
+
+        guess_labels = VGroup(
+            *[
+                MathTex(" = 0 ", color=BLACK)
+                .move_to(guess_arrows.submobjects[i])
+                .scale(0.5)
+                .shift(RIGHT * 0.4)
+                for i in range(0, 3)
+            ]
+        )
+
+        backtrack_diagram = Group(vars[:-1], guess_arrows, guess_labels, contr)
+        backtrack_diagram.shift(LEFT * 4)
+
+        backtrack_just_title = (
+            Text("Backtracking Justifications: ", **TALK_BODY_TEXT)
+            .scale(0.7)
+            .shift(RIGHT * 4 + UP * 1.5)
+        )
+
+        backtrack_just_title.color = UG_COBALT
+
+        prop_just_title = (
+            Text("Propagation Justifications: ", **TALK_BODY_TEXT)
+            .scale(0.7)
+            .next_to(backtrack_just_title, DOWN * 8)
+        )
+
+        prop_just_title.color = UG_COBALT
+        self.wait()
+        self.next_slide()
+        self.play(FadeIn(backtrack_just_title))
+        self.next_slide()
+        self.play(FadeIn(prop_just_title))
+        self.next_slide()
+
+        for i in range(0, 3):
+            self.play(
+                FadeIn(vars[i]),
+                GrowArrow(guess_arrows[i]),
+                FadeIn(guess_labels[i]),
+                run_time=0.5,
+            )
+            self.next_slide()
+
+        self.play(FadeIn(contr))
+        self.next_slide()
+
+        backtrack_just = MathTex(
+            r"\overline{x_{0 = 0}} + \overline{x_{1 = 0}} + \overline{x_{2 = 0}} \geq 1",
+            color=BLACK,
+        ).next_to(backtrack_just_title, DOWN * 2)
+
+        prop_just = MathTex(
+            r"{x_{0 = 0} \land x_{1 = 0} \implies \overline{x_{2 = 3}} \geq 1",
+            color=BLACK,
+        ).next_to(prop_just_title, DOWN * 2)
+
+        output_arrow2 = Arrow(
+            prop_just.get_left() + LEFT * 2,
+            prop_just.get_left(),
+            tip_shape=StealthTip,
+            color=GRAY,
+            stroke_width=4,
+        )
+
+        output_arrow1 = Arrow(
+            backtrack_just.get_left() + LEFT * 2,
+            backtrack_just.get_left(),
+            tip_shape=StealthTip,
+            color=GRAY,
+            stroke_width=4,
+        ).align_to(output_arrow2, LEFT)
+
+        self.play(
+            FadeIn(backtrack_just, shift=RIGHT), FadeIn(output_arrow1, shift=RIGHT)
+        )
+
+        self.next_slide()
+
+        self.play(FadeOut(contr), FadeOut(guess_labels[2]), FadeOut(guess_arrows[2]))
+
+        self.next_slide()
+
+        prop_arrow = DashedLine(
+            vars[2].get_center(),
+            vars[2].get_center() + RIGHT * 2.5,
+            dash_length=0.1,
+            color=UG_COBALT,
+            buff=0.5,
+        ).add_tip(
+            tip_length=guess_arrows[0].tip.length, tip_width=guess_arrows[0].tip.width
+        )
+
+        prop = (
+            MathTex(r" \neq 3 ", color=UG_COBALT).scale(0.7).next_to(prop_arrow, RIGHT)
+        )
+
+        self.play(
+            GrowFromPoint(prop_arrow, prop_arrow.start), FadeIn(prop, shift=RIGHT)
+        )
+
+        self.next_slide()
+
+        self.play(FadeIn(prop_just, shift=RIGHT), FadeIn(output_arrow2, shift=RIGHT))
 
 
 class TheChallenge(TalkSlide):

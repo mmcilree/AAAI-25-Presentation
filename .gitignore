@@ -1,5 +1,6 @@
 *.toml 
 *.DS_Store
+*.pptx
 
 media/
 slides/
